@@ -1,6 +1,6 @@
-use std::{path::Path, fs};
 use clap::{App, Arg};
 use rmd::parser::lex;
+use std::{fs, path::Path};
 
 fn main() {
     let res = App::new("rmd")
@@ -22,10 +22,17 @@ fn main() {
         Some(x) => {
             let res = fs::read(x);
             if res.is_ok() {
-                lex::parse(&res.unwrap())
+                let tokens = lex::tokenize(&res.unwrap());
+                
+                // print tokens for debugging
+                for t in tokens.iter() {
+                    println!("{:?}", t);
+                }
+
+                return;
             }
             panic!("failed to read file!");
-        },
+        }
         None => panic!("failed to cast path str to PathBuf!"),
     }
 }
@@ -34,9 +41,7 @@ fn validate_file_path(v: &str) -> Result<(), String> {
     if Path::new(v).exists() {
         return Ok(());
     }
-    Err(String::from(
-        "the file must exist!",
-    ))
+    Err(String::from("the file must exist!"))
 }
 
 #[cfg(test)]

@@ -1,50 +1,120 @@
+use std::cell::RefCell;
+
 #[derive(Debug)]
 enum TokenType {
-    Heading1,
-    Heading2,
-    Heading3,
+    Hash,
+    String,
+    Asterisk,
+    Underscore,
+    Whitespace,
+    GraveAccent,
+    Pipe,
+    Newline,
+    Dash,
+    GreaterThan,
+    Colon,
+    LBracket,
+    RBracket,
+    LParen,
+    RParen,
+    Exclamation,
+    SingleQuote,
+    DoubleQuote,
 }
 
 #[derive(Debug)]
-struct Token {
-    kind: TokenType,
-    value: Option<String>,
+pub struct Token {
+    r#type: TokenType,
+    value: RefCell<String>,
 }
 
-pub fn parse(input: &Vec<u8>) {
+pub fn tokenize(input: &Vec<u8>) -> Vec<Token> {
     let mut tokens: Vec<Token> = vec![];
     let mut i = 0;
     while i < input.len() {
         match input[i] as char {
-            '#' => {
-                println!("{}", i);
-                let mut count: u8 = 1;
-                let mut j = i + 1;
-                while j < input.len() && input[j] as char == '#' && count < 3 {
-                    count += 1;
-                    j += 1;
+            '#' => tokens.push(Token {
+                r#type: TokenType::Hash,
+                value: RefCell::new('#'.to_string()),
+            }),
+            '*' => tokens.push(Token {
+                r#type: TokenType::Asterisk,
+                value: RefCell::new('*'.to_string()),
+            }),
+            '_' => tokens.push(Token {
+                r#type: TokenType::Underscore,
+                value: RefCell::new('_'.to_string()),
+            }),
+            '`' => tokens.push(Token {
+                r#type: TokenType::GraveAccent,
+                value: RefCell::new('`'.to_string()),
+            }),
+            '|' => tokens.push(Token {
+                r#type: TokenType::Pipe,
+                value: RefCell::new('|'.to_string()),
+            }),
+            '-' => tokens.push(Token {
+                r#type: TokenType::Dash,
+                value: RefCell::new('-'.to_string()),
+            }),
+            '>' => tokens.push(Token {
+                r#type: TokenType::GreaterThan,
+                value: RefCell::new('>'.to_string()),
+            }),
+            ':' => tokens.push(Token {
+                r#type: TokenType::Colon,
+                value: RefCell::new(':'.to_string()),
+            }),
+            '!' => tokens.push(Token {
+                r#type: TokenType::Exclamation,
+                value: RefCell::new('!'.to_string()),
+            }),
+            '[' => tokens.push(Token {
+                r#type: TokenType::LBracket,
+                value: RefCell::new('['.to_string()),
+            }),
+            ']' => tokens.push(Token {
+                r#type: TokenType::RBracket,
+                value: RefCell::new(']'.to_string()),
+            }),
+            '(' => tokens.push(Token {
+                r#type: TokenType::LParen,
+                value: RefCell::new("\\(".to_string()),
+            }),
+            ')' => tokens.push(Token {
+                r#type: TokenType::RParen,
+                value: RefCell::new("\\)".to_string()),
+            }),
+            '\'' => tokens.push(Token {
+                r#type: TokenType::SingleQuote,
+                value: RefCell::new('\''.to_string()),
+            }),
+            '"' => tokens.push(Token {
+                r#type: TokenType::DoubleQuote,
+                value: RefCell::new('"'.to_string()),
+            }),
+            ' ' => tokens.push(Token {
+                r#type: TokenType::Whitespace,
+                value: RefCell::new(' '.to_string()),
+            }),
+            '\n' => tokens.push(Token {
+                r#type: TokenType::Newline,
+                value: RefCell::new('\n'.to_string()),
+            }),
+            // append to last token's value if string
+            v => {
+                let last = tokens.last();
+                if last.is_some() && matches!(last.unwrap().r#type, TokenType::String) {
+                    last.unwrap().value.borrow_mut().push(v);
+                } else {
+                    tokens.push(Token {
+                        r#type: TokenType::String,
+                        value: RefCell::new(v.to_string()),
+                    });
                 }
-                match count {
-                    1 => tokens.push(Token {
-                        kind: TokenType::Heading1,
-                        value: None,
-                    }),
-                    2 => tokens.push(Token {
-                        kind: TokenType::Heading2,
-                        value: None,
-                    }),
-                    3 => tokens.push(Token {
-                        kind: TokenType::Heading3,
-                        value: None,
-                    }),
-                    _ => {}
-                }
-                i += (count - 1) as usize;
             }
-            _ => panic!("invalid token!"),
         }
         i += 1;
     }
-
-    println!("{:?}", tokens);
+    return tokens;
 }
